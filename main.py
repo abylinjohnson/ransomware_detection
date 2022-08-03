@@ -1,5 +1,7 @@
 import pandas as pd
-
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 
 #Legit Software
 
@@ -19,9 +21,39 @@ wannacry_write = pd.read_csv('ransomware/wannacry/ata_write.csv')
 ryuk_read = pd.read_csv('ransomware/ryuk/ata_read.csv')
 ryuk_write = pd.read_csv('ransomware/ryuk/ata_write.csv')
 
-legit_readset = [aescrypt_read, excel_read]  
-legit_writeset = [aescrypt_write, excel_write]  
+#Legit Read and write
+legit_read = pd.concat([aescrypt_read, excel_read])
+legit_write = pd.concat([aescrypt_write, excel_write])
+legit_read['ransomware'] = 0 
+legit_write['ransomware'] = 0 
+#Ransomware Read and write
+ran_read = pd.concat([wannacry_read, ryuk_read])
+ran_write = pd.concat([wannacry_write, ryuk_write])
+ran_read['ransomware'] = 1
+ran_write['ransomware'] = 1
 
-legit_read = aescrypt_read.merge(excel_read)
-print(aescrypt_read.shape)
-print(excel_read.head())
+write_data = pd.concat([legit_write,ran_write])
+read_data = pd.concat([legit_read, ran_read])
+
+# print(read_data)
+# print(legit_write.)
+# print(ran_read.shape)
+# print(ran_write.shape)
+
+# Getting X and Y values for write data
+x = write_data.iloc[:,0:-1]
+y = write_data.iloc[:,-1:]
+# print(y)
+
+#Testing and training
+xtrain, xtest, ytrain, ytest = train_test_split(x,y.values.ravel(),test_size=0.25,random_state=1)
+
+#print(xtrain.shape)
+#print(xtest.shape)
+
+knn = KNeighborsClassifier(n_neighbors = 5)
+knn.fit(xtrain, ytrain)
+
+y_predict = knn.predict(xtest)
+
+print("Accuracy Score: ",accuracy_score(ytest,y_predict)*100,"%")
